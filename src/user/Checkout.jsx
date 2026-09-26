@@ -9,21 +9,45 @@ export default function Checkout() {
   const [cartItems, setCartItems] = useState([]);
   const [isSuccess, setIsSuccess] = useState(false);
 
-  // Form state
+  // Form state with user info preloaded and other fields blank
   const [formData, setFormData] = useState({
-    fullName: 'John Doe',
-    email: 'johndoe@example.com',
-    address: '123 Silicon Boulevard',
-    city: 'Tech City',
-    zipCode: '90210',
-    cardNumber: '•••• •••• •••• 4242',
-    expiry: '12/28',
-    cvv: '123'
+    fullName: '',
+    email: '',
+    address: '',
+    city: '',
+    zipCode: '',
+    cardNumber: '',
+    expiry: '',
+    cvv: ''
   });
 
   useEffect(() => {
     const savedCart = JSON.parse(localStorage.getItem('pc_cart') || '[]');
     setCartItems(savedCart);
+
+    // Retrieve logged-in session data or registered users to auto-populate name and email
+    const sessionEmail = localStorage.getItem('user_email');
+    const registeredUsers = JSON.parse(localStorage.getItem('apex_registered_users') || '[]');
+    
+    let matchedName = '';
+    let matchedEmail = sessionEmail || '';
+
+    if (sessionEmail) {
+      const found = registeredUsers.find(u => u.email.trim().toLowerCase() === sessionEmail.trim().toLowerCase());
+      if (found) {
+        matchedName = found.name;
+      } else if (sessionEmail === 'user@gmail.com') {
+        matchedName = 'Default User';
+      } else if (sessionEmail === 'admin@gmail.com') {
+        matchedName = 'System Administrator';
+      }
+    }
+
+    setFormData(prev => ({
+      ...prev,
+      fullName: matchedName || '',
+      email: matchedEmail || ''
+    }));
   }, []);
 
   // Calculate totals
@@ -128,8 +152,9 @@ export default function Checkout() {
                     name="fullName"
                     value={formData.fullName}
                     onChange={handleInputChange}
+                    placeholder="Enter your full name"
                     required
-                    className="w-full bg-[#121215] border border-neutral-800 rounded-xl px-3 py-2 text-xs text-white focus:outline-none focus:border-purple-500"
+                    className="w-full bg-[#121215] border border-neutral-800 rounded-xl px-3 py-2 text-xs text-white focus:outline-none focus:border-purple-500 placeholder:text-neutral-600"
                   />
                 </div>
                 <div className="space-y-1">
@@ -139,8 +164,9 @@ export default function Checkout() {
                     name="email"
                     value={formData.email}
                     onChange={handleInputChange}
+                    placeholder="name@example.com"
                     required
-                    className="w-full bg-[#121215] border border-neutral-800 rounded-xl px-3 py-2 text-xs text-white focus:outline-none focus:border-purple-500"
+                    className="w-full bg-[#121215] border border-neutral-800 rounded-xl px-3 py-2 text-xs text-white focus:outline-none focus:border-purple-500 placeholder:text-neutral-600"
                   />
                 </div>
               </div>
@@ -152,8 +178,9 @@ export default function Checkout() {
                   name="address"
                   value={formData.address}
                   onChange={handleInputChange}
+                  placeholder="e.g. 123 Main Street"
                   required
-                  className="w-full bg-[#121215] border border-neutral-800 rounded-xl px-3 py-2 text-xs text-white focus:outline-none focus:border-purple-500"
+                  className="w-full bg-[#121215] border border-neutral-800 rounded-xl px-3 py-2 text-xs text-white focus:outline-none focus:border-purple-500 placeholder:text-neutral-600"
                 />
               </div>
 
@@ -165,8 +192,9 @@ export default function Checkout() {
                     name="city"
                     value={formData.city}
                     onChange={handleInputChange}
+                    placeholder="e.g. San Jose"
                     required
-                    className="w-full bg-[#121215] border border-neutral-800 rounded-xl px-3 py-2 text-xs text-white focus:outline-none focus:border-purple-500"
+                    className="w-full bg-[#121215] border border-neutral-800 rounded-xl px-3 py-2 text-xs text-white focus:outline-none focus:border-purple-500 placeholder:text-neutral-600"
                   />
                 </div>
                 <div className="space-y-1">
@@ -176,8 +204,9 @@ export default function Checkout() {
                     name="zipCode"
                     value={formData.zipCode}
                     onChange={handleInputChange}
+                    placeholder="e.g. 3130"
                     required
-                    className="w-full bg-[#121215] border border-neutral-800 rounded-xl px-3 py-2 text-xs text-white focus:outline-none focus:border-purple-500"
+                    className="w-full bg-[#121215] border border-neutral-800 rounded-xl px-3 py-2 text-xs text-white focus:outline-none focus:border-purple-500 placeholder:text-neutral-600"
                   />
                 </div>
               </div>
@@ -197,8 +226,9 @@ export default function Checkout() {
                   name="cardNumber"
                   value={formData.cardNumber}
                   onChange={handleInputChange}
+                  placeholder="xxxx xxxx xxxx xxxx"
                   required
-                  className="w-full bg-[#121215] border border-neutral-800 rounded-xl px-3 py-2 text-xs text-white focus:outline-none focus:border-purple-500"
+                  className="w-full bg-[#121215] border border-neutral-800 rounded-xl px-3 py-2 text-xs text-white focus:outline-none focus:border-purple-500 placeholder:text-neutral-600"
                 />
               </div>
 
@@ -210,8 +240,9 @@ export default function Checkout() {
                     name="expiry"
                     value={formData.expiry}
                     onChange={handleInputChange}
+                    placeholder="MM/YY"
                     required
-                    className="w-full bg-[#121215] border border-neutral-800 rounded-xl px-3 py-2 text-xs text-white focus:outline-none focus:border-purple-500"
+                    className="w-full bg-[#121215] border border-neutral-800 rounded-xl px-3 py-2 text-xs text-white focus:outline-none focus:border-purple-500 placeholder:text-neutral-600"
                   />
                 </div>
                 <div className="space-y-1">
@@ -222,8 +253,9 @@ export default function Checkout() {
                     maxLength="4"
                     value={formData.cvv}
                     onChange={handleInputChange}
+                    placeholder="123"
                     required
-                    className="w-full bg-[#121215] border border-neutral-800 rounded-xl px-3 py-2 text-xs text-white focus:outline-none focus:border-purple-500"
+                    className="w-full bg-[#121215] border border-neutral-800 rounded-xl px-3 py-2 text-xs text-white focus:outline-none focus:border-purple-500 placeholder:text-neutral-600"
                   />
                 </div>
               </div>

@@ -1,52 +1,17 @@
-import { useState } from 'react';
-import { Truck, Package, CheckCircle2, Clock, Eye, ShoppingCart } from 'lucide-react';
+import { useState, useEffect } from 'react';
+import { Truck, Package, CheckCircle2, Clock, Eye } from 'lucide-react';
 import Navbar from '../components/Navbar';
 import Footer from '../components/Footer';
 
-// Mock order history data
-const mockOrders = [
-  {
-    id: 'ORD-2026-8941',
-    date: 'Oct 24, 2026',
-    status: 'In Transit',
-    total: 2218.00,
-    itemsCount: 2,
-    trackingNumber: 'TRK-9982341109',
-    estimatedDelivery: 'Oct 28, 2026',
-    items: [
-      { name: 'Apex Titan RTX 5090 OC', price: 1999.00, quantity: 1, category: 'GPU' },
-      { name: 'HydroShift Liquid Cooler 360', price: 219.00, quantity: 1, category: 'Cooling' }
-    ]
-  },
-  {
-    id: 'ORD-2026-7230',
-    date: 'Sep 12, 2026',
-    status: 'Delivered',
-    total: 589.00,
-    itemsCount: 1,
-    trackingNumber: 'TRK-8810293481',
-    estimatedDelivery: 'Sep 15, 2026',
-    items: [
-      { name: 'Core Ultra 9 285K Processor', price: 589.00, quantity: 1, category: 'CPU' }
-    ]
-  },
-  {
-    id: 'ORD-2026-5192',
-    date: 'Aug 03, 2026',
-    status: 'Processing',
-    total: 399.00,
-    itemsCount: 1,
-    trackingNumber: 'TRK-3392019482',
-    estimatedDelivery: 'Pending',
-    items: [
-      { name: 'Cyberpunk Motherboard Z890', price: 399.00, quantity: 1, category: 'Motherboard' }
-    ]
-  }
-];
-
 export default function Order() {
-  const [orders] = useState(mockOrders);
+  const [orders, setOrders] = useState([]);
   const [selectedOrder, setSelectedOrder] = useState(null);
+
+  // Load actual orders from localStorage on mount
+  useEffect(() => {
+    const savedOrders = JSON.parse(localStorage.getItem('pc_orders') || '[]');
+    setOrders(savedOrders);
+  }, []);
 
   return (
     <div className="min-h-screen bg-[#0d0d0f] text-white flex flex-col selection:bg-purple-600 selection:text-white relative">
@@ -72,59 +37,70 @@ export default function Order() {
         </div>
 
         {/* Orders Body */}
-        <div className="space-y-4">
-          {orders.map((order) => (
-            <div 
-              key={order.id}
-              className="bg-[#161619] border border-neutral-800 rounded-3xl p-6 flex flex-col lg:flex-row items-start lg:items-center justify-between gap-6 hover:border-purple-500/40 transition-all shadow-lg"
-            >
-              {/* Order Meta */}
-              <div className="space-y-2">
-                <div className="flex items-center space-x-3">
-                  <span className="text-base font-bold text-white">{order.id}</span>
-                  <span className={`text-xs font-bold uppercase tracking-wider px-3 py-1 rounded-full border flex items-center gap-1.5 ${
-                    order.status === 'Delivered' 
-                      ? 'bg-emerald-500/20 text-emerald-300 border-emerald-500/30' 
-                      : order.status === 'In Transit'
-                      ? 'bg-purple-500/20 text-purple-300 border-purple-500/30'
-                      : 'bg-amber-500/20 text-amber-300 border-amber-500/30'
-                  }`}>
-                    {order.status === 'Delivered' && <CheckCircle2 className="w-3.5 h-3.5" />}
-                    {order.status === 'In Transit' && <Truck className="w-3.5 h-3.5" />}
-                    {order.status === 'Processing' && <Clock className="w-3.5 h-3.5" />}
-                    {order.status}
-                  </span>
-                </div>
-                <p className="text-xs text-neutral-400">
-                  Placed on <span className="text-neutral-200 font-medium">{order.date}</span> • Est. Delivery: <span className="text-neutral-200 font-medium">{order.estimatedDelivery}</span>
-                </p>
-              </div>
-
-              {/* Items & Total info */}
-              <div className="flex items-center space-x-8">
-                <div>
-                  <span className="text-[10px] font-bold uppercase tracking-wider text-neutral-500 block">Items</span>
-                  <span className="text-sm font-semibold text-neutral-200">{order.itemsCount} Unit(s)</span>
-                </div>
-                <div>
-                  <span className="text-[10px] font-bold uppercase tracking-wider text-neutral-500 block">Order Total</span>
-                  <span className="text-base font-bold text-white">${order.total.toFixed(2)}</span>
-                </div>
-
-                <button
-                  onClick={() => setSelectedOrder(order)}
-                  className="px-4 py-2.5 bg-[#0f0f12] hover:bg-neutral-800 text-neutral-200 text-xs font-semibold rounded-xl border border-neutral-800 transition-all flex items-center space-x-2 cursor-pointer shadow-sm"
+        {orders.length === 0 ? (
+          <div className="text-center py-24 bg-[#161619] border border-neutral-800 rounded-3xl space-y-3 shadow-xl">
+            <Package className="w-12 h-12 mx-auto text-neutral-600" />
+            <h3 className="text-sm font-bold text-white">No orders placed yet</h3>
+            <p className="text-xs text-neutral-400">Complete a checkout from your cart to see your live order history here.</p>
+          </div>
+        ) : (
+          <div className="space-y-4">
+            {orders.map((order) => {
+              const itemCount = order.items ? order.items.reduce((acc, item) => acc + (item.quantity || 1), 0) : 0;
+              return (
+                <div 
+                  key={order.id}
+                  className="bg-[#161619] border border-neutral-800 rounded-3xl p-6 flex flex-col lg:flex-row items-start lg:items-center justify-between gap-6 hover:border-purple-500/40 transition-all shadow-lg"
                 >
-                  <Eye className="w-4 h-4 text-purple-400" />
-                  <span>View Details</span>
-                </button>
-              </div>
-            </div>
-          ))}
-        </div>
+                  {/* Order Meta */}
+                  <div className="space-y-2">
+                    <div className="flex items-center space-x-3">
+                      <span className="text-base font-bold text-white">{order.id}</span>
+                      <span className={`text-xs font-bold uppercase tracking-wider px-3 py-1 rounded-full border flex items-center gap-1.5 ${
+                        order.status === 'Delivered' 
+                          ? 'bg-emerald-500/20 text-emerald-300 border-emerald-500/30' 
+                          : order.status === 'In Transit'
+                          ? 'bg-purple-500/20 text-purple-300 border-purple-500/30'
+                          : 'bg-amber-500/20 text-amber-300 border-amber-500/30'
+                      }`}>
+                        {order.status === 'Delivered' && <CheckCircle2 className="w-3.5 h-3.5" />}
+                        {order.status === 'In Transit' && <Truck className="w-3.5 h-3.5" />}
+                        {order.status === 'Processing' && <Clock className="w-3.5 h-3.5" />}
+                        {order.status}
+                      </span>
+                    </div>
+                    <p className="text-xs text-neutral-400">
+                      Placed on <span className="text-neutral-200 font-medium">{order.date}</span> • Shipping to: <span className="text-neutral-200 font-medium">{order.shippingAddress}</span>
+                    </p>
+                  </div>
+
+                  {/* Items & Total info */}
+                  <div className="flex items-center space-x-8">
+                    <div>
+                      <span className="text-[10px] font-bold uppercase tracking-wider text-neutral-500 block">Items</span>
+                      <span className="text-sm font-semibold text-neutral-200">{itemCount} Unit(s)</span>
+                    </div>
+                    <div>
+                      <span className="text-[10px] font-bold uppercase tracking-wider text-neutral-500 block">Order Total</span>
+                      <span className="text-base font-bold text-white">${order.totalPrice.toFixed(2)}</span>
+                    </div>
+
+                    <button
+                      onClick={() => setSelectedOrder(order)}
+                      className="px-4 py-2.5 bg-[#0f0f12] hover:bg-neutral-800 text-neutral-200 text-xs font-semibold rounded-xl border border-neutral-800 transition-all flex items-center space-x-2 cursor-pointer shadow-sm"
+                    >
+                      <Eye className="w-4 h-4 text-purple-400" />
+                      <span>View Details</span>
+                    </button>
+                  </div>
+                </div>
+              );
+            })}
+          </div>
+        )}
 
       </main>
-  <Footer />
+      <Footer />
 
       {/* Order Details Modal */}
       {selectedOrder && (
@@ -145,35 +121,40 @@ export default function Order() {
               </button>
             </div>
 
-            {/* Tracking info */}
+            {/* Tracking/Address info */}
             <div className="bg-[#0f0f12] p-4 rounded-2xl border border-neutral-800 space-y-2">
               <div className="flex justify-between text-xs">
-                <span className="text-neutral-400">Tracking Code:</span>
-                <span className="text-purple-400 font-mono font-bold">{selectedOrder.trackingNumber}</span>
+                <span className="text-neutral-400">Shipping Address:</span>
+                <span className="text-white font-semibold text-right">{selectedOrder.shippingAddress}</span>
               </div>
               <div className="flex justify-between text-xs">
                 <span className="text-neutral-400">Fulfillment Status:</span>
-                <span className="text-white font-semibold">{selectedOrder.status}</span>
+                <span className="text-purple-400 font-semibold">{selectedOrder.status}</span>
               </div>
             </div>
 
             {/* Product list in order */}
             <div className="space-y-3 max-h-60 overflow-y-auto pr-1">
               <span className="text-xs font-bold uppercase tracking-wider text-neutral-500 block">Purchased Parts</span>
-              {selectedOrder.items.map((item, idx) => (
+              {selectedOrder.items && selectedOrder.items.map((item, idx) => (
                 <div key={idx} className="flex items-center justify-between bg-[#0f0f12] p-3.5 rounded-xl border border-neutral-800">
-                  <div>
-                    <h4 className="text-xs font-bold text-white">{item.name}</h4>
-                    <p className="text-[10px] text-neutral-400 mt-0.5">{item.category} • Qty: {item.quantity}</p>
+                  <div className="flex items-center space-x-3">
+                    {item.image && (
+                      <img src={item.image} alt={item.name} className="w-10 h-10 object-cover rounded-lg border border-neutral-800" />
+                    )}
+                    <div>
+                      <h4 className="text-xs font-bold text-white">{item.name}</h4>
+                      <p className="text-[10px] text-neutral-400 mt-0.5">Qty: {item.quantity || 1}</p>
+                    </div>
                   </div>
-                  <span className="text-xs font-bold text-white">${item.price.toFixed(2)}</span>
+                  <span className="text-xs font-bold text-white">${(item.totalPrice || item.price || 0).toFixed(2)}</span>
                 </div>
               ))}
             </div>
 
             <div className="pt-4 border-t border-neutral-800 flex items-center justify-between">
-              <span className="text-sm font-bold text-neutral-400">Total Paid:</span>
-              <span className="text-lg font-bold text-white">${selectedOrder.total.toFixed(2)}</span>
+              <span className="text-sm font-bold text-neutral-400">Total Paid (Inc. Shipping):</span>
+              <span className="text-lg font-bold text-white">${selectedOrder.totalPrice.toFixed(2)}</span>
             </div>
           </div>
         </div>

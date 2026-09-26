@@ -1,10 +1,10 @@
-import { useState } from 'react';
+import { useState, useEffect } from 'react';
 import { Mail, Phone, Clock, CheckCircle2, Send } from 'lucide-react';
 
 export default function ContactSupport() {
   const [formData, setFormData] = useState({
-    name: 'Justine Salcedo',
-    email: 'justine@example.com',
+    name: '',
+    email: '',
     category: 'technical',
     orderId: '',
     subject: '',
@@ -13,6 +13,32 @@ export default function ContactSupport() {
 
   const [isSubmitted, setIsSubmitted] = useState(false);
   const [isSubmitting, setIsSubmitting] = useState(false);
+
+  // Preload name and email from localStorage session/users on mount
+  useEffect(() => {
+    const sessionEmail = localStorage.getItem('user_email');
+    const registeredUsers = JSON.parse(localStorage.getItem('apex_registered_users') || '[]');
+    
+    let matchedName = '';
+    let matchedEmail = sessionEmail || '';
+
+    if (sessionEmail) {
+      const found = registeredUsers.find(u => u.email.trim().toLowerCase() === sessionEmail.trim().toLowerCase());
+      if (found) {
+        matchedName = found.name;
+      } else if (sessionEmail === 'user@gmail.com') {
+        matchedName = 'Default User';
+      } else if (sessionEmail === 'admin@gmail.com') {
+        matchedName = 'System Administrator';
+      }
+    }
+
+    setFormData(prev => ({
+      ...prev,
+      name: matchedName || '',
+      email: matchedEmail || ''
+    }));
+  }, []);
 
   const handleSubmit = (e) => {
     e.preventDefault();
@@ -27,9 +53,27 @@ export default function ContactSupport() {
 
   const handleReset = () => {
     setIsSubmitted(false);
+    
+    // Retain preloaded user details on reset
+    const sessionEmail = localStorage.getItem('user_email');
+    const registeredUsers = JSON.parse(localStorage.getItem('apex_registered_users') || '[]');
+    let matchedName = '';
+    let matchedEmail = sessionEmail || '';
+
+    if (sessionEmail) {
+      const found = registeredUsers.find(u => u.email.trim().toLowerCase() === sessionEmail.trim().toLowerCase());
+      if (found) {
+        matchedName = found.name;
+      } else if (sessionEmail === 'user@gmail.com') {
+        matchedName = 'Default User';
+      } else if (sessionEmail === 'admin@gmail.com') {
+        matchedName = 'System Administrator';
+      }
+    }
+
     setFormData({
-      name: 'Justine Salcedo',
-      email: 'justine@example.com',
+      name: matchedName || '',
+      email: matchedEmail || '',
       category: 'technical',
       orderId: '',
       subject: '',
