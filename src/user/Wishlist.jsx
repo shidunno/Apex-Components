@@ -1,41 +1,47 @@
-import { useState } from 'react';
-import { Heart, ShoppingCart, Trash2, ArrowRight } from 'lucide-react';
+import { useState, useEffect } from 'react';
+import { Heart, ShoppingCart, Trash2, CheckCircle } from 'lucide-react';
 import Navbar from '../components/Navbar';
 import Footer from '../components/Footer';
 
-// Mock wishlist data
-const initialWishlist = [
-  {
-    id: 1,
-    name: 'Apex Titan RTX 5090 OC',
-    category: 'Graphics Card',
-    price: 1999.00,
-    inStock: true,
-    rating: 4.9,
-  },
-  {
-    id: 2,
-    name: 'HydroShift Liquid Cooler 360',
-    category: 'CPU Cooling',
-    price: 219.00,
-    inStock: true,
-    rating: 4.8,
-  },
-  {
-    id: 3,
-    name: 'Core Ultra 9 285K Processor',
-    category: 'Processor (CPU)',
-    price: 589.00,
-    inStock: false,
-    rating: 4.7,
-  },
-];
-
 export default function Wishlist() {
-  const [wishlistItems, setWishlistItems] = useState(initialWishlist);
+  const [wishlistItems, setWishlistItems] = useState([]);
+  const [addedIds, setAddedIds] = useState([]);
+
+  useEffect(() => {
+    const savedWishlist = JSON.parse(localStorage.getItem('apex_wishlist') || '[]');
+    setWishlistItems(savedWishlist);
+  }, []);
 
   const removeItem = (id) => {
-    setWishlistItems(wishlistItems.filter(item => item.id !== id));
+    const updatedItems = wishlistItems.filter(item => item.id !== id);
+    setWishlistItems(updatedItems);
+    localStorage.setItem('apex_wishlist', JSON.stringify(updatedItems));
+  };
+
+  const addToCart = (item) => {
+    const currentCart = JSON.parse(localStorage.getItem('pc_cart') || '[]');
+    const existingIndex = currentCart.findIndex(cartItem => cartItem.id === item.id);
+
+    let updatedCart;
+    if (existingIndex > -1) {
+      updatedCart = currentCart.map((cartItem, idx) => {
+        if (idx === existingIndex) {
+          const newQty = (cartItem.quantity || 1) + 1;
+          return { ...cartItem, quantity: newQty, totalPrice: cartItem.price * newQty };
+        }
+        return cartItem;
+      });
+    } else {
+      updatedCart = [...currentCart, { ...item, quantity: 1, totalPrice: item.price }];
+    }
+
+    localStorage.setItem('pc_cart', JSON.stringify(updatedCart));
+
+    // Trigger inline success feedback instead of an alert
+    setAddedIds(prev => [...prev, item.id]);
+    setTimeout(() => {
+      setAddedIds(prev => prev.filter(id => id !== item.id));
+    }, 2000);
   };
 
   return (
@@ -70,60 +76,74 @@ export default function Wishlist() {
           </div>
         ) : (
           <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
-            {wishlistItems.map((item) => (
-              <div 
-                key={item.id}
-                className="bg-[#161619] border border-neutral-800 rounded-3xl p-6 flex flex-col justify-between gap-6 hover:border-purple-500/40 transition-all shadow-lg relative group"
-              >
-                {/* Remove Button */}
-                <button 
-                  onClick={() => removeItem(item.id)}
-                  title="Remove from wishlist"
-                  className="absolute top-4 right-4 p-2 bg-[#0f0f12] text-neutral-400 hover:text-rose-400 rounded-xl border border-neutral-800 transition-all cursor-pointer"
+            {wishlistItems.map((item) => {
+              const isJustAdded = addedIds.includes(item.id);
+              return (
+                <div 
+                  key={item.id}
+                  className="bg-[#161619] border border-neutral-800 rounded-3xl p-6 flex flex-col justify-between gap-6 hover:border-purple-500/40 transition-all shadow-lg relative group"
                 >
-                  <Trash2 className="w-4 h-4" />
-                </button>
-
-                {/* Item Meta */}
-                <div className="space-y-2 pr-8">
-                  <span className="text-[10px] font-bold uppercase tracking-wider text-purple-400 bg-purple-500/10 px-2.5 py-1 rounded-full border border-purple-500/20">
-                    {item.category}
-                  </span>
-                  <h3 className="text-base font-bold text-white mt-2">{item.name}</h3>
-                  <div className="flex items-center space-x-2">
-                    <span className={`text-[10px] font-bold uppercase tracking-wider px-2 py-0.5 rounded-full border ${
-                      item.inStock 
-                        ? 'bg-emerald-500/20 text-emerald-300 border-emerald-500/30' 
-                        : 'bg-rose-500/20 text-rose-300 border-rose-500/30'
-                    }`}>
-                      {item.inStock ? 'In Stock' : 'Out of Stock'}
-                    </span>
-                    <span className="text-xs text-neutral-400">★ {item.rating}</span>
-                  </div>
-                </div>
-
-                {/* Price & Action */}
-                <div className="pt-4 border-t border-neutral-800 flex items-center justify-between">
-                  <div>
-                    <span className="text-[10px] font-bold uppercase tracking-wider text-neutral-500 block">Price</span>
-                    <span className="text-lg font-bold text-white">${item.price.toFixed(2)}</span>
-                  </div>
-
-                  <button
-                    disabled={!item.inStock}
-                    onClick={() => alert(`Added ${item.name} to cart!`)}
-                    className={`px-4 py-2.5 rounded-xl text-xs font-semibold flex items-center space-x-2 transition-all shadow-sm ${
-                      item.inStock
-                        ? 'bg-gradient-to-r from-purple-600 to-indigo-600 text-white hover:opacity-90 cursor-pointer shadow-purple-900/30'
-                        : 'bg-neutral-800 text-neutral-500 cursor-not-allowed border border-neutral-700/50'
-                    }`}
+                  {/* Remove Button */}
+                  <button 
+                    onClick={() => removeItem(item.id)}
+                    title="Remove from wishlist"
+                    className="absolute top-4 right-4 p-2 bg-[#0f0f12] text-neutral-400 hover:text-rose-400 rounded-xl border border-neutral-800 transition-all cursor-pointer"
                   >
-                    <ShoppingCart className="w-4 h-4" />
-                    <span>Add to Cart</span>
+                    <Trash2 className="w-4 h-4" />
                   </button>
+
+                  {/* Item Meta */}
+                  <div className="space-y-2 pr-8">
+                    <span className="text-[10px] font-bold uppercase tracking-wider text-purple-400 bg-purple-500/10 px-2.5 py-1 rounded-full border border-purple-500/20">
+                      {item.category || 'Hardware'}
+                    </span>
+                    <h3 className="text-base font-bold text-white mt-2">{item.name}</h3>
+                    <div className="flex items-center space-x-2">
+                      <span className={`text-[10px] font-bold uppercase tracking-wider px-2 py-0.5 rounded-full border ${
+                        item.inStock !== false 
+                          ? 'bg-emerald-500/20 text-emerald-300 border-emerald-500/30' 
+                          : 'bg-rose-500/20 text-rose-300 border-rose-500/30'
+                      }`}>
+                        {item.inStock !== false ? 'In Stock' : 'Out of Stock'}
+                      </span>
+                      <span className="text-xs text-neutral-400">★ {item.rating || '4.9'}</span>
+                    </div>
+                  </div>
+
+                  {/* Price & Action */}
+                  <div className="pt-4 border-t border-neutral-800 flex items-center justify-between">
+                    <div>
+                      <span className="text-[10px] font-bold uppercase tracking-wider text-neutral-500 block">Price</span>
+                      <span className="text-lg font-bold text-white">${Number(item.price).toFixed(2)}</span>
+                    </div>
+
+                    <button
+                      disabled={item.inStock === false}
+                      onClick={() => addToCart(item)}
+                      className={`px-4 py-2.5 rounded-xl text-xs font-semibold flex items-center space-x-2 transition-all shadow-sm cursor-pointer ${
+                        isJustAdded
+                          ? 'bg-emerald-600 text-white shadow-emerald-900/40'
+                          : item.inStock !== false
+                            ? 'bg-gradient-to-r from-purple-600 to-indigo-600 text-white hover:opacity-90 shadow-purple-900/30'
+                            : 'bg-neutral-800 text-neutral-500 cursor-not-allowed border border-neutral-700/50'
+                      }`}
+                    >
+                      {isJustAdded ? (
+                        <>
+                          <CheckCircle className="w-4 h-4" />
+                          <span>Added</span>
+                        </>
+                      ) : (
+                        <>
+                          <ShoppingCart className="w-4 h-4" />
+                          <span>Add to Cart</span>
+                        </>
+                      )}
+                    </button>
+                  </div>
                 </div>
-              </div>
-            ))}
+              );
+            })}
           </div>
         )}
 

@@ -125,16 +125,16 @@ export default function Catalog() {
   const [cartItems, setCartItems] = useState([]);
   const [isCartOpen, setIsCartOpen] = useState(false);
 
-  // Wishlist state
-  const [wishlistIds, setWishlistIds] = useState([]);
+  // Wishlist state (stores full objects now)
+  const [wishlistItems, setWishlistItems] = useState([]);
 
   // Load initial cart and wishlist from localStorage
   useEffect(() => {
     const existingCart = JSON.parse(localStorage.getItem('pc_cart') || '[]');
     setCartItems(existingCart);
 
-    const existingWishlist = JSON.parse(localStorage.getItem('pc_wishlist') || '[]');
-    setWishlistIds(existingWishlist);
+    const existingWishlist = JSON.parse(localStorage.getItem('apex_wishlist') || '[]');
+    setWishlistItems(existingWishlist);
   }, []);
 
   const saveAndSyncCart = (updatedCart) => {
@@ -143,14 +143,17 @@ export default function Catalog() {
   };
 
   const toggleWishlist = (product) => {
+    const exists = wishlistItems.some(item => item.id === product.id);
     let updatedWishlist;
-    if (wishlistIds.includes(product.id)) {
-      updatedWishlist = wishlistIds.filter(id => id !== product.id);
+    
+    if (exists) {
+      updatedWishlist = wishlistItems.filter(item => item.id !== product.id);
     } else {
-      updatedWishlist = [...wishlistIds, product.id];
+      updatedWishlist = [...wishlistItems, product];
     }
-    setWishlistIds(updatedWishlist);
-    localStorage.setItem('pc_wishlist', JSON.stringify(updatedWishlist));
+
+    setWishlistItems(updatedWishlist);
+    localStorage.setItem('apex_wishlist', JSON.stringify(updatedWishlist));
   };
 
   // Filter products based on category and search text
@@ -235,9 +238,9 @@ export default function Catalog() {
               title="View Wishlist"
             >
               <Heart className="w-4 h-4 text-rose-500" />
-              {wishlistIds.length > 0 && (
+              {wishlistItems.length > 0 && (
                 <span className="absolute -top-1.5 -right-1.5 bg-rose-600 text-white text-[10px] font-black w-5 h-5 rounded-full flex items-center justify-center shadow-md border-2 border-[#121215]">
-                  {wishlistIds.length}
+                  {wishlistItems.length}
                 </span>
               )}
             </button>
@@ -286,7 +289,7 @@ export default function Catalog() {
           <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
             {filteredProducts.map((product) => {
               const isJustAdded = addedIds.includes(product.id);
-              const isWishlisted = wishlistIds.includes(product.id);
+              const isWishlisted = wishlistItems.some(item => item.id === product.id);
               return (
                 <div 
                   key={product.id}

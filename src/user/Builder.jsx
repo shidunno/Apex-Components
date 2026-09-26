@@ -56,6 +56,29 @@ export default function Builder() {
   const totalPower = Object.values(selectedParts).reduce((acc, part) => acc + (part ? part.power : 0), 0);
   const recommendedPSU = totalPower > 0 ? Math.ceil((totalPower * 1.3) / 50) * 50 : 0;
 
+  const handleAddBuildToCart = () => {
+    if (Object.keys(selectedParts).length === 0) return;
+
+    const cpuName = selectedParts.cpu ? selectedParts.cpu.name : 'Custom CPU';
+    const gpuName = selectedParts.gpu ? selectedParts.gpu.name : 'Custom GPU';
+    const buildName = `Custom Rig: ${cpuName} + ${gpuName}`;
+
+    const cartItem = {
+      id: 'CUSTOM-RIG-' + Date.now(),
+      name: buildName,
+      price: totalPrice,
+      totalPrice: totalPrice,
+      quantity: 1,
+      category: 'Custom PC Build',
+      parts: selectedParts
+    };
+
+    const existingCart = JSON.parse(localStorage.getItem('pc_cart') || '[]');
+    localStorage.setItem('pc_cart', JSON.stringify([...existingCart, cartItem]));
+
+    alert(`Successfully added custom build to cart! Total: $${totalPrice.toFixed(2)}`);
+  };
+
   const tabs = [
     { id: 'cpu', label: 'Processor (CPU)' },
     { id: 'motherboard', label: 'Motherboard' },
@@ -230,7 +253,7 @@ export default function Builder() {
 
                 <button
                   disabled={Object.keys(selectedParts).length === 0}
-                  onClick={() => alert(`Successfully added custom build to cart! Total: $${totalPrice.toFixed(2)}`)}
+                  onClick={handleAddBuildToCart}
                   className={`w-full py-3.5 text-white text-sm font-bold rounded-xl transition-all shadow-lg flex items-center justify-center space-x-2 ${
                     Object.keys(selectedParts).length === 0 
                       ? 'bg-neutral-800 text-neutral-500 cursor-not-allowed shadow-none' 

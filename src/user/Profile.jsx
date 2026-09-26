@@ -1,4 +1,4 @@
-import { useState, useRef } from 'react';
+import { useState, useRef, useEffect } from 'react';
 import { 
   Award, User, Mail, ShieldCheck, Key, Save, CheckCircle2, Lock, MapPin, Camera 
 } from 'lucide-react';
@@ -31,29 +31,114 @@ export default function Profile() {
   const [saved, setSaved] = useState(false);
   const [addressSaved, setAddressSaved] = useState(false);
   const [passwordSaved, setPasswordSaved] = useState(false);
+  const [passwordError, setPasswordError] = useState('');
+
+  // Load user profile and address data from localStorage on mount
+  useEffect(() => {
+    const sessionEmail = localStorage.getItem('user_email');
+    const registeredUsers = JSON.parse(localStorage.getItem('apex_registered_users') || '[]');
+    const savedAddress = JSON.parse(localStorage.getItem('apex_user_address') || 'null');
+    const savedAvatar = localStorage.getItem('apex_user_avatar');
+
+    if (sessionEmail) {
+      const foundUser = registeredUsers.find(u => u.email.trim().toLowerCase() === sessionEmail.trim().toLowerCase());
+      if (foundUser) {
+        setFormData({
+          name: foundUser.name || 'Justine Salcedo',
+          email: foundUser.email || sessionEmail
+        });
+      } else {
+        setFormData(prev => ({ ...prev, email: sessionEmail }));
+      }
+    }
+
+    if (savedAddress) {
+      setAddressData(savedAddress);
+    }
+
+    if (savedAvatar) {
+      setAvatarPreview(savedAvatar);
+    }
+  }, []);
 
   const handleImageChange = (e) => {
     const file = e.target.files[0];
     if (file) {
-      const imageUrl = URL.createObjectURL(file);
-      setAvatarPreview(imageUrl);
+      const reader = new FileReader();
+      reader.onloadend = () => {
+        const result = reader.result;
+        setAvatarPreview(result);
+        localStorage.setItem('apex_user_avatar', result);
+      };
+      reader.readAsDataURL(file);
     }
   };
 
   const handleProfileSubmit = (e) => {
     e.preventDefault();
+    
+    localStorage.setItem('user_email', formData.email);
+    const registeredUsers = JSON.parse(localStorage.getItem('apex_registered_users') || '[]');
+    const sessionEmail = localStorage.getItem('user_email');
+
+    const updatedUsers = registeredUsers.map(u => {
+      if (u.email === sessionEmail || u.name === formData.name) {
+        return { ...u, name: formData.name, email: formData.email };
+      }
+      return u;
+    });
+
+    if (!updatedUsers.some(u => u.email === formData.email)) {
+      updatedUsers.push({ name: formData.name, email: formData.email });
+    }
+
+    localStorage.setItem('apex_registered_users', JSON.stringify(updatedUsers));
+
     setSaved(true);
     setTimeout(() => setSaved(false), 3000);
   };
 
   const handleAddressSubmit = (e) => {
     e.preventDefault();
+    localStorage.setItem('apex_user_address', JSON.stringify(addressData));
     setAddressSaved(true);
     setTimeout(() => setAddressSaved(false), 3000);
   };
 
   const handlePasswordSubmit = (e) => {
     e.preventDefault();
+    setPasswordError('');
+
+    // Retrieve stored password or default to a standard placeholder if none exists
+    const sessionEmail = localStorage.getItem('user_email');
+    const registeredUsers = JSON.parse(localStorage.getItem('apex_registered_users') || '[]');
+    const currentUser = registeredUsers.find(u => u.email.trim().toLowerCase() === (sessionEmail || '').trim().toLowerCase());
+    
+    const storedPassword = currentUser?.password || localStorage.getItem('apex_user_password') || 'password123';
+
+    // Validate current password
+    if (passwordData.currentPassword !== storedPassword) {
+      setPasswordError('Incorrect current password entered.');
+      return;
+    }
+
+    if (passwordData.newPassword !== passwordData.confirmPassword) {
+      setPasswordError('New passwords do not match.');
+      return;
+    }
+
+    if (passwordData.newPassword.length < 6) {
+      setPasswordError('New password must be at least 6 characters long.');
+      return;
+    }
+
+    // Save new password to localStorage
+    localStorage.setItem('apex_user_password', passwordData.newPassword);
+    if (currentUser) {
+      currentUser.password = passwordData.newPassword;
+      localStorage.setItem('apex_registered_users', JSON.stringify(registeredUsers));
+    }
+
     setPasswordSaved(true);
     setPasswordData({ currentPassword: '', newPassword: '', confirmPassword: '' });
     setTimeout(() => setPasswordSaved(false), 3000);
@@ -63,7 +148,6 @@ export default function Profile() {
     <div className="min-h-screen bg-[#0d0d0f] text-white flex flex-col selection:bg-purple-600 selection:text-white relative font-sans">
       <Navbar />
 
-      {/* MAIN CONTENT CONTAINER */}
       <main className="flex-1 flex flex-col min-w-0 bg-[#0d0d0f] max-w-4xl mx-auto w-full p-6 md:p-10 pt-8 space-y-8">
         
         {/* Page Title & Intro Header */}
@@ -90,13 +174,12 @@ export default function Profile() {
         <div className="bg-[#161619] border border-neutral-800 rounded-3xl p-6 md:p-8 space-y-6 shadow-2xl">
           <div className="flex items-center space-x-4 pb-6 border-b border-neutral-800">
             
-            {/* CHANGEABLE AVATAR */}
             <div className="relative group cursor-pointer" onClick={() => fileInputRef.current.click()}>
               <div className="w-16 h-16 rounded-2xl bg-gradient-to-tr from-purple-600 to-indigo-500 flex items-center justify-center font-extrabold text-xl text-white shadow-lg overflow-hidden border border-neutral-700">
                 {avatarPreview ? (
                   <img src={avatarPreview} alt="Avatar" className="w-full h-full object-cover" />
                 ) : (
-                  'JS'
+                  formData.name ? formData.name.split(' ').map(n => n[0]).join('').slice(0, 2).toUpperCase() : 'JS'
                 )}
               </div>
               <div className="absolute inset-0 bg-black/60 rounded-2xl flex flex-col items-center justify-center opacity-0 group-hover:opacity-100 transition-opacity">
@@ -114,7 +197,7 @@ export default function Profile() {
 
             <div>
               <h2 className="text-lg font-bold text-white flex items-center gap-2">
-                Justine Salcedo <ShieldCheck className="w-5 h-5 text-purple-400" />
+                {formData.name || 'User Profile'} <ShieldCheck className="w-5 h-5 text-purple-400" />
               </h2>
               <span className="text-xs text-neutral-400 block mt-0.5">Click your avatar icon to upload a custom profile picture</span>
             </div>
@@ -268,6 +351,12 @@ export default function Profile() {
             <div className="flex items-center space-x-3 bg-emerald-500/10 border border-emerald-500/20 px-4 py-3 rounded-2xl text-emerald-300 text-sm font-medium shadow-lg">
               <CheckCircle2 className="w-5 h-5 text-emerald-400 shrink-0" />
               <span>Password updated successfully!</span>
+            </div>
+          )}
+
+          {passwordError && (
+            <div className="bg-rose-500/10 border border-rose-500/20 px-4 py-3 rounded-2xl text-rose-300 text-xs font-medium">
+              {passwordError}
             </div>
           )}
 

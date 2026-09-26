@@ -28,6 +28,7 @@ export default function Checkout() {
     // Retrieve logged-in session data or registered users to auto-populate name and email
     const sessionEmail = localStorage.getItem('user_email');
     const registeredUsers = JSON.parse(localStorage.getItem('apex_registered_users') || '[]');
+    const savedAddress = JSON.parse(localStorage.getItem('apex_user_address') || 'null');
     
     let matchedName = '';
     let matchedEmail = sessionEmail || '';
@@ -46,7 +47,10 @@ export default function Checkout() {
     setFormData(prev => ({
       ...prev,
       fullName: matchedName || '',
-      email: matchedEmail || ''
+      email: matchedEmail || '',
+      address: savedAddress?.street || '',
+      city: savedAddress?.city || '',
+      zipCode: savedAddress?.postalCode || ''
     }));
   }, []);
 
