@@ -1,5 +1,5 @@
 import { useState, useEffect } from 'react';
-import { Link } from 'react-router-dom';
+import { Link, useNavigate } from 'react-router-dom';
 import Footer from '../components/Footer';
 
 // Import your images from the assets folder
@@ -26,9 +26,11 @@ const slides = [
 ];
 
 export default function Login() {
+  const navigate = useNavigate();
   const [email, setEmail] = useState('');
   const [password, setPassword] = useState('');
   const [isLoading, setIsLoading] = useState(false);
+  const [errorMessage, setErrorMessage] = useState('');
   const [currentSlide, setCurrentSlide] = useState(0);
 
   // Automatically cycle through the slider images every 6 seconds
@@ -42,13 +44,31 @@ export default function Login() {
   const handleLogin = (e) => {
     e.preventDefault();
     setIsLoading(true);
+    setErrorMessage('');
     
-    // Simulate network request
     setTimeout(() => {
       setIsLoading(false);
-      console.log('Logging in with:', email, password);
-      alert(`Successfully logged in as: ${email}`);
-    }, 1200);
+
+      // 1. Check default test accounts
+      const isDefaultUser = 
+        (email === 'user@gmail.com' && password === 'qazplm09') ||
+        (email === 'admin@gmail.com' && password === 'qazplm09');
+
+      // 2. Check accounts registered via Register.jsx
+      const registeredUsers = JSON.parse(localStorage.getItem('apex_registered_users') || '[]');
+      const foundUser = registeredUsers.find(
+        (u) => u.email.trim().toLowerCase() === email.trim().toLowerCase() && u.password === password
+      );
+
+      if (isDefaultUser || foundUser) {
+        // Successful login: store session email and redirect
+        localStorage.setItem('user_email', email);
+        navigate('/dashboard');
+      } else {
+        // Failed login
+        setErrorMessage('Invalid email or password. Please check your credentials or create an account.');
+      }
+    }, 1000);
   };
 
   return (
@@ -133,6 +153,12 @@ export default function Login() {
               </Link>
             </p>
           </div>
+
+          {errorMessage && (
+            <div className="mb-4 p-3 bg-rose-500/10 border border-rose-500/30 text-rose-400 text-xs rounded-xl font-medium">
+              {errorMessage}
+            </div>
+          )}
 
           <form onSubmit={handleLogin} className="space-y-4">
             <div>

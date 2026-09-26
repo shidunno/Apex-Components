@@ -1,5 +1,5 @@
 import { useState, useEffect } from 'react';
-import { Link } from 'react-router-dom';
+import { Link, useNavigate } from 'react-router-dom';
 import Footer from '../components/Footer';
 
 // Import your images from the assets folder
@@ -26,11 +26,13 @@ const slides = [
 ];
 
 export default function Register() {
+  const navigate = useNavigate();
   const [name, setName] = useState('');
   const [email, setEmail] = useState('');
   const [password, setPassword] = useState('');
   const [confirmPassword, setConfirmPassword] = useState('');
   const [isLoading, setIsLoading] = useState(false);
+  const [errorMessage, setErrorMessage] = useState('');
   const [currentSlide, setCurrentSlide] = useState(0);
 
   // Automatically cycle through the slider images every 6 seconds
@@ -43,20 +45,36 @@ export default function Register() {
 
   const handleRegister = (e) => {
     e.preventDefault();
+    setErrorMessage('');
     
     if (password !== confirmPassword) {
-      alert("Passwords do not match!");
+      setErrorMessage("Passwords do not match!");
       return;
     }
 
     setIsLoading(true);
     
-    // Simulate network request
     setTimeout(() => {
       setIsLoading(false);
-      console.log('Registering user with:', name, email, password);
-      alert(`Account successfully created for ${name} (${email})!`);
-    }, 1200);
+
+      // Save user details to local storage so Login can verify it
+      const existingUsers = JSON.parse(localStorage.getItem('apex_registered_users') || '[]');
+      
+      // Check if email already exists
+      const userExists = existingUsers.some(user => user.email === email);
+      if (userExists) {
+        setErrorMessage('An account with this email already exists. Try logging in.');
+        return;
+      }
+
+      const newUser = { name, email, password };
+      existingUsers.push(newUser);
+      localStorage.setItem('apex_registered_users', JSON.stringify(existingUsers));
+
+      // Automatically log them in or redirect to login page
+      alert(`Account successfully created for ${name}! You can now log in.`);
+      navigate('/login');
+    }, 1000);
   };
 
   return (
@@ -141,6 +159,12 @@ export default function Register() {
               </Link>
             </p>
           </div>
+
+          {errorMessage && (
+            <div className="mb-4 p-3 bg-rose-500/10 border border-rose-500/30 text-rose-400 text-xs rounded-xl font-medium">
+              {errorMessage}
+            </div>
+          )}
 
           <form onSubmit={handleRegister} className="space-y-4">
             <div>

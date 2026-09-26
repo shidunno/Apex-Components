@@ -1,9 +1,25 @@
-import { useState } from 'react';
-import { Link } from 'react-router-dom';
-import { User } from 'lucide-react';
+import { useState, useEffect } from 'react';
+import { Link, useNavigate } from 'react-router-dom';
+import { User, LogOut } from 'lucide-react';
 
 export default function Navbar() {
+  const navigate = useNavigate();
   const [isOpen, setIsOpen] = useState(false);
+  const [userEmail, setUserEmail] = useState(null);
+
+  // Check login state on component mount
+  useEffect(() => {
+    const email = localStorage.getItem('user_email');
+    if (email) {
+      setUserEmail(email);
+    }
+  }, []);
+
+  const handleLogout = () => {
+    localStorage.removeItem('user_email');
+    setUserEmail(null);
+    navigate('/login');
+  };
 
   return (
     <header className="sticky top-0 z-50 w-full bg-[#121215]/95 backdrop-blur-md border-b border-neutral-800 shadow-[0_12px_30px_-20px_rgba(168,85,247,0.7)]">
@@ -20,14 +36,14 @@ export default function Navbar() {
 
           {/* Desktop Navigation Links */}
           <nav className="hidden lg:flex items-center gap-1 bg-[#0f0f12]/80 border border-neutral-800 rounded-2xl p-1 text-xs font-medium text-neutral-300">
-            <Link to="/" className="px-3 py-2 rounded-xl hover:bg-purple-500/10 hover:text-purple-300 transition-colors">Overview</Link>
+            <Link to="/dashboard" className="px-3 py-2 rounded-xl hover:bg-purple-500/10 hover:text-purple-300 transition-colors">Overview</Link>
             <Link to="/catalog" className="px-3 py-2 rounded-xl hover:bg-purple-500/10 hover:text-purple-300 transition-colors">Products</Link>
             <Link to="/builder" className="px-3 py-2 rounded-xl hover:bg-purple-500/10 hover:text-purple-300 transition-colors">PC Builder</Link>
             <Link to="/order" className="px-3 py-2 rounded-xl hover:bg-purple-500/10 hover:text-purple-300 transition-colors">Order</Link>
             <Link to="/support" className="px-3 py-2 rounded-xl hover:bg-purple-500/10 hover:text-purple-300 transition-colors">Contact</Link>
           </nav>
 
-          {/* Right Action Buttons & Profile Icon */}
+          {/* Right Action Buttons & Profile / Auth State */}
           <div className="hidden md:flex items-center space-x-3">
             <Link 
               to="/profile" 
@@ -36,18 +52,37 @@ export default function Navbar() {
             >
               <User className="w-4 h-4 text-purple-400" />
             </Link>
-            <Link 
-              to="/login" 
-              className="text-xs font-semibold text-neutral-300 hover:text-white transition-colors px-3 py-2"
-            >
-              Log In
-            </Link>
-            <Link 
-              to="/register" 
-              className="text-xs font-semibold text-white bg-gradient-to-r from-purple-600 to-indigo-600 hover:from-purple-500 hover:to-indigo-500 px-4 py-2.5 rounded-xl shadow-lg shadow-purple-900/30 transition-all"
-            >
-              Get Started
-            </Link>
+
+            {userEmail ? (
+              <div className="flex items-center space-x-3">
+                <span className="text-xs text-purple-300 font-semibold bg-purple-950/60 px-3 py-2 rounded-xl border border-purple-500/30">
+                  {userEmail}
+                </span>
+                <button 
+                  onClick={handleLogout}
+                  className="flex items-center space-x-1.5 text-xs font-semibold text-neutral-300 hover:text-rose-400 bg-[#161619] hover:bg-rose-500/10 border border-neutral-800 px-3 py-2 rounded-xl transition-all cursor-pointer"
+                  title="Log Out"
+                >
+                  <LogOut className="w-3.5 h-3.5" />
+                  <span>Logout</span>
+                </button>
+              </div>
+            ) : (
+              <>
+                <Link 
+                  to="/login" 
+                  className="text-xs font-semibold text-neutral-300 hover:text-white transition-colors px-3 py-2"
+                >
+                  Log In
+                </Link>
+                <Link 
+                  to="/register" 
+                  className="text-xs font-semibold text-white bg-gradient-to-r from-purple-600 to-indigo-600 hover:from-purple-500 hover:to-indigo-500 px-4 py-2.5 rounded-xl shadow-lg shadow-purple-900/30 transition-all"
+                >
+                  Get Started
+                </Link>
+              </>
+            )}
           </div>
 
           {/* Mobile Menu Toggle & Profile Button */}
@@ -81,7 +116,7 @@ export default function Navbar() {
       {isOpen && (
         <div className="lg:hidden bg-[#161619] border-b border-neutral-800 px-4 pt-4 pb-6 space-y-2">
           <Link 
-            to="/" 
+            to="/dashboard" 
             onClick={() => setIsOpen(false)} 
             className="block text-neutral-300 hover:text-purple-400 font-medium py-2 text-xs"
           >
@@ -123,21 +158,33 @@ export default function Navbar() {
           >
             Contact
           </Link>
+
           <div className="pt-4 flex flex-col space-y-2 border-t border-neutral-800">
-            <Link 
-              to="/login" 
-              onClick={() => setIsOpen(false)} 
-              className="text-center text-xs font-semibold text-neutral-300 py-2.5 bg-neutral-800 rounded-xl"
-            >
-              Log In
-            </Link>
-            <Link 
-              to="/register" 
-              onClick={() => setIsOpen(false)} 
-              className="text-center text-xs font-semibold text-white bg-gradient-to-r from-purple-600 to-indigo-600 py-2.5 rounded-xl shadow-lg"
-            >
-              Get Started
-            </Link>
+            {userEmail ? (
+              <button 
+                onClick={() => { setIsOpen(false); handleLogout(); }}
+                className="w-full text-center text-xs font-semibold text-rose-400 py-2.5 bg-rose-500/10 border border-rose-500/20 rounded-xl"
+              >
+                Log Out ({userEmail})
+              </button>
+            ) : (
+              <>
+                <Link 
+                  to="/login" 
+                  onClick={() => setIsOpen(false)} 
+                  className="text-center text-xs font-semibold text-neutral-300 py-2.5 bg-neutral-800 rounded-xl"
+                >
+                  Log In
+                </Link>
+                <Link 
+                  to="/register" 
+                  onClick={() => setIsOpen(false)} 
+                  className="text-center text-xs font-semibold text-white bg-gradient-to-r from-purple-600 to-indigo-600 py-2.5 rounded-xl shadow-lg"
+                >
+                  Get Started
+                </Link>
+              </>
+            )}
           </div>
         </div>
       )}
