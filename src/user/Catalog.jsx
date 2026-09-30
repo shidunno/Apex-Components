@@ -4,8 +4,8 @@ import { useNavigate } from 'react-router-dom';
 import Navbar from '../components/Navbar';
 import Footer from '../components/Footer';
 
-// Unified product list for the catalog with image fields included
-const allProducts = [
+// Combined default products including ALL items from Builder.jsx + extras
+const defaultProducts = [
   // CPUs
   { 
     id: 'cpu-1', 
@@ -37,7 +37,39 @@ const allProducts = [
     type: 'Component',
     image: 'https://images.unsplash.com/photo-1591799264318-7e6ef8ddb7ea?auto=format&fit=crop&w=500&q=80' 
   },
-  
+
+  // Motherboards
+  { 
+    id: 'mb-1', 
+    name: 'Cyberpunk Motherboard Z890', 
+    category: 'motherboard', 
+    price: 399.00, 
+    power: 35, 
+    badge: 'LGA 1851 • DDR5', 
+    type: 'Component',
+    image: 'https://images.unsplash.com/photo-1518770660439-4636190af475?auto=format&fit=crop&w=500&q=80' 
+  },
+  { 
+    id: 'mb-2', 
+    name: 'ROG Maximus X870 Hero', 
+    category: 'motherboard', 
+    price: 499.00, 
+    power: 40, 
+    badge: 'AM5 • Wi-Fi 7', 
+    type: 'Component',
+    image: 'https://images.unsplash.com/photo-1526738549149-8e07eca6c147?auto=format&fit=crop&w=500&q=80' 
+  },
+  { 
+    id: 'mb-3', 
+    name: 'TUF Gaming B850-PLUS', 
+    category: 'motherboard', 
+    price: 219.00, 
+    power: 30, 
+    badge: 'AM5 • PCIe 5.0', 
+    type: 'Component',
+    image: 'https://images.unsplash.com/photo-1518770660439-4636190af475?auto=format&fit=crop&w=500&q=80' 
+  },
+
   // GPUs
   { 
     id: 'gpu-1', 
@@ -70,28 +102,72 @@ const allProducts = [
     image: 'https://images.unsplash.com/photo-1587202372634-32705e3bf49c?auto=format&fit=crop&w=500&q=80' 
   },
 
-  // Motherboards
+  // RAM
   { 
-    id: 'mb-1', 
-    name: 'Cyberpunk Motherboard Z890', 
-    category: 'motherboard', 
-    price: 399.00, 
-    power: 35, 
-    badge: 'LGA 1851 • DDR5', 
+    id: 'ram-1', 
+    name: 'Dominator Titanium 64GB DDR5', 
+    category: 'ram', 
+    price: 249.00, 
+    power: 15, 
+    badge: '6000MHz CL30 RGB', 
     type: 'Component',
-    image: 'https://images.unsplash.com/photo-1518770660439-4636190af475?auto=format&fit=crop&w=500&q=80' 
+    image: 'https://images.unsplash.com/photo-1562976540-1e02c414c14d?auto=format&fit=crop&w=500&q=80' 
   },
   { 
-    id: 'mb-2', 
-    name: 'ROG Maximus X870 Hero', 
-    category: 'motherboard', 
-    price: 499.00, 
-    power: 40, 
-    badge: 'AM5 • Wi-Fi 7', 
+    id: 'ram-2', 
+    name: 'Vengeance RGB 32GB DDR5', 
+    category: 'ram', 
+    price: 129.00, 
+    power: 12, 
+    badge: '5600MHz CL36', 
     type: 'Component',
-    image: 'https://images.unsplash.com/photo-1526738549149-8e07eca6c147?auto=format&fit=crop&w=500&q=80' 
+    image: 'https://images.unsplash.com/photo-1562976540-1e02c414c14d?auto=format&fit=crop&w=500&q=80' 
   },
-  
+
+  // Cooling
+  { 
+    id: 'cool-1', 
+    name: 'HydroShift Liquid Cooler 360', 
+    category: 'cooling', 
+    price: 219.00, 
+    power: 20, 
+    badge: '360mm ARGB Radiator', 
+    type: 'Component',
+    image: 'https://images.unsplash.com/photo-1610465299993-82674c31f457?auto=format&fit=crop&w=500&q=80' 
+  },
+  { 
+    id: 'cool-2', 
+    name: 'Kraken Elite 280 RGB AIO', 
+    category: 'cooling', 
+    price: 249.00, 
+    power: 22, 
+    badge: 'LCD Pump Display', 
+    type: 'Component',
+    image: 'https://images.unsplash.com/photo-1610465299993-82674c31f457?auto=format&fit=crop&w=500&q=80' 
+  },
+
+  // Cases
+  { 
+    id: 'case-1', 
+    name: 'O11 Dynamic EVO XL Tower', 
+    category: 'case', 
+    price: 239.00, 
+    power: 10, 
+    badge: 'Dual Chamber Tempered Glass', 
+    type: 'Component',
+    image: 'https://images.unsplash.com/photo-1587831990711-23ca6441447b?auto=format&fit=crop&w=500&q=80' 
+  },
+  { 
+    id: 'case-2', 
+    name: 'Corsair 5000D Airflow', 
+    category: 'case', 
+    price: 174.00, 
+    power: 10, 
+    badge: 'High-Airflow Mid-Tower', 
+    type: 'Component',
+    image: 'https://images.unsplash.com/photo-1587831990711-23ca6441447b?auto=format&fit=crop&w=500&q=80' 
+  },
+
   // Pre-builts
   { 
     id: 'pc-1', 
@@ -117,24 +193,46 @@ const allProducts = [
 
 export default function Catalog() {
   const navigate = useNavigate();
+  const [products, setProducts] = useState([]);
   const [selectedCategory, setSelectedCategory] = useState('all');
   const [searchQuery, setSearchQuery] = useState('');
   const [addedIds, setAddedIds] = useState([]);
   
-  // Cart state and drawer visibility
   const [cartItems, setCartItems] = useState([]);
   const [isCartOpen, setIsCartOpen] = useState(false);
-
-  // Wishlist state (stores full objects now)
   const [wishlistItems, setWishlistItems] = useState([]);
 
-  // Load initial cart and wishlist from localStorage
   useEffect(() => {
+    const loadCatalogData = () => {
+      const storedProducts = JSON.parse(localStorage.getItem('apex_catalog_products') || JSON.stringify(defaultProducts));
+      
+      const normalizedProducts = storedProducts.map(p => ({
+        ...p,
+        category: p.category ? p.category.toLowerCase() : 'cpu',
+        power: p.power || 150,
+        badge: p.badge || (p.stock !== undefined ? `${p.stock} units in stock` : 'In Stock'),
+        type: p.type || 'Component',
+        image: p.image || 'https://images.unsplash.com/photo-1587202372775-e229f172b9d7?auto=format&fit=crop&w=500&q=80'
+      }));
+
+      setProducts(normalizedProducts);
+    };
+
+    // Initial load
+    loadCatalogData();
+
+    // Listen for custom event triggered when admin saves/updates products
+    window.addEventListener('apex_products_updated', loadCatalogData);
+
     const existingCart = JSON.parse(localStorage.getItem('pc_cart') || '[]');
     setCartItems(existingCart);
 
     const existingWishlist = JSON.parse(localStorage.getItem('apex_wishlist') || '[]');
     setWishlistItems(existingWishlist);
+
+    return () => {
+      window.removeEventListener('apex_products_updated', loadCatalogData);
+    };
   }, []);
 
   const saveAndSyncCart = (updatedCart) => {
@@ -156,11 +254,10 @@ export default function Catalog() {
     localStorage.setItem('apex_wishlist', JSON.stringify(updatedWishlist));
   };
 
-  // Filter products based on category and search text
-  const filteredProducts = allProducts.filter(product => {
+  const filteredProducts = products.filter(product => {
     const matchesCategory = selectedCategory === 'all' || product.category === selectedCategory;
     const matchesSearch = product.name.toLowerCase().includes(searchQuery.toLowerCase()) || 
-                          product.badge.toLowerCase().includes(searchQuery.toLowerCase());
+                          (product.badge && product.badge.toLowerCase().includes(searchQuery.toLowerCase()));
     return matchesCategory && matchesSearch;
   });
 
@@ -169,7 +266,7 @@ export default function Catalog() {
       id: Date.now() + Math.random(),
       date: new Date().toLocaleDateString(),
       parts: { [product.category]: product },
-      totalPrice: product.price,
+      totalPrice: Number(product.price),
       totalPower: product.power,
       recommendedPSU: Math.ceil((product.power * 1.3) / 50) * 50 || 500,
       name: product.name,
@@ -180,7 +277,6 @@ export default function Catalog() {
     const updatedCart = [...cartItems, cartItem];
     saveAndSyncCart(updatedCart);
 
-    // Feedback effect
     setAddedIds(prev => [...prev, product.id]);
     setTimeout(() => {
       setAddedIds(prev => prev.filter(id => id !== product.id));
@@ -199,8 +295,11 @@ export default function Catalog() {
   const categories = [
     { id: 'all', label: 'All Products' },
     { id: 'cpu', label: 'Processors (CPU)' },
-    { id: 'gpu', label: 'Graphics Cards (GPU)' },
     { id: 'motherboard', label: 'Motherboards' },
+    { id: 'gpu', label: 'Graphics Cards (GPU)' },
+    { id: 'ram', label: 'Memory (RAM)' },
+    { id: 'cooling', label: 'Cooling' },
+    { id: 'case', label: 'Chassis / Case' },
     { id: 'prebuilt', label: 'Pre-Built Rigs' }
   ];
 
@@ -208,17 +307,14 @@ export default function Catalog() {
     <div className="min-h-screen bg-[#0d0d0f] text-white flex flex-col selection:bg-purple-600 selection:text-white relative">
       <Navbar />
       
-      {/* Content Layout */}
       <main className="p-6 md:p-10 max-w-6xl mx-auto w-full space-y-8 flex-1 pt-8">
         
-        {/* Page Title & Integrated Controls Bar */}
         <div className="flex flex-col md:flex-row md:items-center justify-between gap-4 pb-2 border-b border-neutral-800">
           <div>
             <h1 className="text-xl font-bold tracking-tight text-white">Product Catalog & Store</h1>
-            <p className="text-xs text-neutral-400 mt-0.5">Browse individual hardware parts or complete pre-built desktop systems.</p>
+            <p className="text-xs text-neutral-400 mt-0.5">Browse individual builder components or complete pre-built desktop systems.</p>
           </div>
 
-          {/* Search Bar, Wishlist Button & Cart Trigger Button */}
           <div className="flex items-center gap-3 w-full md:w-auto">
             <div className="relative w-full md:w-64">
               <Search className="absolute left-3 top-2.5 w-4 h-4 text-neutral-500" />
@@ -231,7 +327,6 @@ export default function Catalog() {
               />
             </div>
 
-            {/* Wishlist Navigation Button */}
             <button 
               onClick={() => navigate('/wishlist')}
               className="relative bg-[#161619] hover:bg-neutral-800 border border-neutral-800 hover:border-neutral-700 p-2.5 rounded-xl text-neutral-200 transition-all cursor-pointer flex items-center justify-center shrink-0"
@@ -245,7 +340,6 @@ export default function Catalog() {
               )}
             </button>
 
-            {/* Cart Drawer Toggle Button */}
             <button 
               onClick={() => setIsCartOpen(true)}
               className="relative bg-[#161619] hover:bg-neutral-800 border border-neutral-800 hover:border-neutral-700 p-2.5 rounded-xl text-neutral-200 transition-all cursor-pointer flex items-center justify-center shrink-0"
@@ -296,7 +390,6 @@ export default function Catalog() {
                   className="bg-[#161619] border border-neutral-800 rounded-3xl overflow-hidden flex flex-col justify-between shadow-xl transition-all hover:border-neutral-700 relative"
                 >
                   <div>
-                    {/* Product Image Container */}
                     <div className="w-full h-48 bg-[#1f1f23] relative overflow-hidden border-b border-neutral-800">
                       <img 
                         src={product.image} 
@@ -309,7 +402,6 @@ export default function Catalog() {
                         </span>
                       </div>
                       
-                      {/* Wishlist Heart Button - Top Right Corner */}
                       <button
                         onClick={() => toggleWishlist(product)}
                         className={`absolute top-3 right-3 p-2 rounded-xl backdrop-blur-md border transition-all cursor-pointer shadow-md z-10 ${
@@ -329,18 +421,16 @@ export default function Catalog() {
                       </div>
                     </div>
 
-                    {/* Product Details */}
                     <div className="p-6 space-y-2">
                       <h3 className="text-sm font-bold text-white">{product.name}</h3>
                       <p className="text-[11px] text-neutral-400">{product.badge}</p>
                     </div>
                   </div>
 
-                  {/* Card Footer / Price & Button */}
                   <div className="p-6 pt-0 flex items-center justify-between border-t border-neutral-800/60 mt-4">
                     <div>
                       <span className="text-[10px] text-neutral-500 uppercase block font-bold">Price</span>
-                      <span className="text-xl font-black text-white">${product.price.toFixed(2)}</span>
+                      <span className="text-xl font-black text-white">${Number(product.price).toFixed(2)}</span>
                     </div>
 
                     <button
@@ -373,10 +463,9 @@ export default function Catalog() {
       </main>
       <Footer />
 
-      {/* Slide-Over Cart Drawer */}
+      {/* Cart Drawer */}
       {isCartOpen && (
         <div className="fixed inset-0 z-50 overflow-hidden">
-          {/* Backdrop */}
           <div 
             className="absolute inset-0 bg-black/70 backdrop-blur-sm transition-opacity"
             onClick={() => setIsCartOpen(false)}
@@ -385,7 +474,6 @@ export default function Catalog() {
           <div className="absolute inset-y-0 right-0 max-w-full flex pl-10">
             <div className="w-screen max-w-md bg-[#121215] border-l border-neutral-800 shadow-2xl flex flex-col justify-between">
               
-              {/* Drawer Header */}
               <div className="p-6 border-b border-neutral-800 flex items-center justify-between">
                 <div className="flex items-center space-x-2">
                   <ShoppingCart className="w-5 h-5 text-purple-400" />
@@ -402,7 +490,6 @@ export default function Catalog() {
                 </button>
               </div>
 
-              {/* Drawer Body / Items List */}
               <div className="flex-1 overflow-y-auto p-6 space-y-4">
                 {cartItems.length === 0 ? (
                   <div className="text-center py-20 space-y-3">
@@ -441,7 +528,6 @@ export default function Catalog() {
                 )}
               </div>
 
-              {/* Drawer Footer / Checkout Actions */}
               {cartItems.length > 0 && (
                 <div className="p-6 border-t border-neutral-800 bg-[#161619] space-y-4">
                   <div className="flex items-center justify-between text-sm">

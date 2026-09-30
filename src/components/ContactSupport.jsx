@@ -44,6 +44,24 @@ export default function ContactSupport() {
     e.preventDefault();
     setIsSubmitting(true);
 
+    // 1. Create the new ticket object
+    const newTicket = {
+      id: 'TKT-' + Math.floor(100000 + Math.random() * 900000),
+      name: formData.name,
+      email: formData.email,
+      category: formData.category,
+      orderId: formData.orderId,
+      subject: formData.subject,
+      message: formData.message,
+      date: new Date().toLocaleDateString() + ' ' + new Date().toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' }),
+      status: 'Pending'
+    };
+
+    // 2. Fetch existing tickets from localStorage, append the new one, and save back
+    const existingTickets = JSON.parse(localStorage.getItem('apex_support_tickets') || '[]');
+    const updatedTickets = [newTicket, ...existingTickets];
+    localStorage.setItem('apex_support_tickets', JSON.stringify(updatedTickets));
+
     // Simulate ticket creation API delay
     setTimeout(() => {
       setIsSubmitting(false);

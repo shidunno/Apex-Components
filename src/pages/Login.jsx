@@ -61,9 +61,24 @@ export default function Login() {
       );
 
       if (isDefaultUser || foundUser) {
-        // Successful login: store session email and redirect
-        localStorage.setItem('user_email', email);
-        navigate('/dashboard');
+        // Determine if user is admin based on email
+        const isAdmin = email.trim().toLowerCase() === 'admin@gmail.com';
+        
+        const userData = {
+          email: email,
+          role: isAdmin ? 'admin' : 'user'
+        };
+
+        // Save session data
+        localStorage.setItem('apex_user', JSON.stringify(userData));
+        localStorage.setItem('user_email', email); // keeping compatibility if used elsewhere
+
+        // Conditional routing based on role
+        if (isAdmin) {
+          navigate('/admin');
+        } else {
+          navigate('/dashboard');
+        }
       } else {
         // Failed login
         setErrorMessage('Invalid email or password. Please check your credentials or create an account.');
